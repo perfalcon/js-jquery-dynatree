@@ -1,0 +1,327 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+	<title>Dynatree - Example</title>
+
+	<script src="../jquery/jquery.js" type="text/javascript"></script>
+	<script src="../jquery/jquery-ui.custom.js" type="text/javascript"></script>
+	<script src="../jquery/jquery.cookie.js" type="text/javascript"></script>
+
+	<link href="../src/skin/ui.dynatree.css" rel="stylesheet" type="text/css">
+	<script src="../src/jquery.dynatree.js" type="text/javascript"></script>
+
+
+
+	<!-- Add code to initialize the tree when the document is loaded: -->
+	<script type="text/javascript">
+	$(function(){
+		// Attach the dynatree widget to an existing <div id="tree"> element
+		// and pass the tree options as an argument to the dynatree() function:
+		$("#tree").dynatree({
+			onActivate: function(node) {
+				// A DynaTreeNode object is passed to the activation handler
+				// Note: we also get this event, if persistence is on, and the page is reloaded.
+				//alert("You activated " + node.data.title);
+				
+				showCurrentNodeDetails(node);
+				
+				
+				
+			},
+		children:[
+			{title:'Users',isFolder:true,key:'users'}
+		  ] 
+		});
+		
+		//accordion
+		 $( "#accordion" ).accordion({
+			collapsible: true
+			});
+		
+	}); 
+	
+	function showCurrentNodeDetails(node){
+		var d = node.toDict(true);
+		console.log("showCurrentNodeDetails-->");
+		//var keys=Object.keys(cb);
+        //var vals=Object.values(cb);
+		//$.each(keys,function(i,key){
+			//console.log(key+"--"+vals[i]);
+		//});
+		console.log(d.title);
+		console.log(node.data.key+" -- "+node.data.tooltip);
+		if(node.data.key == "user"){
+			$("#primaryDetails").text("Hello "+node.data.tooltip);
+		}
+		
+		var c=node.getChildren();
+		if(c!=null){
+		console.log(c[0].data.title);
+		if(c[0].data.title=="address"){
+			var ad=c[0].getChildren();
+			var addressHtml="<ul>";
+			$.each(ad,function(i,f){
+				console.log(f.data.title);				 
+				   if(f.data.title.includes("geo")){
+				    $("#geo").text(f.data.title);
+				   }else{
+					addressHtml = addressHtml+"<li>"+f.data.title+"</li>"
+				   }
+				});
+				addressHtml = addressHtml+"</ul>";
+			$("#address").text(addressHtml);	
+		}
+		}
+		
+		
+		
+		
+	}
+	function getDataWithApi(){
+		  var tree = $("#tree").dynatree("getTree");
+		  var usersNode = tree.getNodeByKey("users");
+		  //var rootNode = $("#tree").dynatree("getRoot");
+		  // alert(usersNode);
+		  	  
+		  
+		    var url ="https://jsonplaceholder.typicode.com/users";
+            $.getJSON(url, function(result){
+                $.each(result, function(i, field){
+					var UserNode = usersNode.addChild({
+					title:field.username,
+					tooltip:field.name,
+					key:'user'
+					});
+					var address = UserNode.addChild({
+					title:"address",
+					isFolder:true
+					});
+                    var keys=Object.keys(field.address);
+                    var vals=Object.values(field.address);
+                    $.each(keys,function(j,key){
+                      if(key == 'city'){
+                       console.log(key+"--"+j+"---"+vals[j]);   
+                      }
+					  
+					  if(key == 'geo'){
+						var c = address.addChild({
+							title:key+":"+vals[j].lat+","+vals[j].lng
+						  });
+					  }else{					
+						  var c = address.addChild({
+							title:key+":"+vals[j]
+						  });
+						//title:key+":"+vals[j],
+					  }
+                    });
+                    //console.log(Object.keys(field.address));
+                    
+                    $("#users").append(new Option(field.name, field.username));
+                });
+            });
+ 
+		
+	}
+	</script>
+	<style>
+		* {
+		box-sizing: border-box;
+		}
+
+		/* Create two unequal columns that floats next to each other */
+		.column {
+		float: left;
+		padding: 10px;
+
+		}
+
+		.left {
+		width: 65%;
+		}
+
+		.right {
+		width: 35%;
+		}
+
+		/* Clear floats after the columns */
+		.row:after {
+		content: "";
+		display: table;
+		clear: both;
+		}
+	</style>
+
+</head>
+<body class="example">
+	<h1>Dyna Tree</h1>
+<div class="row">
+  <div class="column left" style="background-color:#aaa;">
+	
+	   <p>
+        Select one from the given options:
+        <select id="users">
+            <option value="free">Free</option>
+            <option value="basic">Basic</option>
+        </select>
+    </p>
+	<!-- Add a <div> element where the tree should appear: -->
+	<div id="tree"> </div>
+    <button onclick="getDataWithApi()">Get Data</button>
+</div>
+ <div class="column right" style="background-color:#bbb;">
+    <div id="accordion">
+  <h3>Primary Details</h3>
+  <div id="primaryDetails">
+    hello
+  </div>
+  <h3>Address</h3>
+  <div id="address">
+    hello1
+  </div>
+  <h3>Geo Coordinaties</h3>
+  <div id="geo">
+    hello2
+  </div>
+ </div>
+</div>
+</div>
+</body>
+<script>
+/*
+https://gist.github.com/stephanbogner/4b590f992ead470658a5ebf09167b03d
+var paths = [
+    ["Account"],
+    ["Account", "Payment Methods"],
+    ["Account", "Payment Methods", "Credit Card"],
+    ["Account", "Payment Methods", "Paypal"],
+    ["Account", "Emails"],
+    ["Account", "Emails", "Main Email"],
+    ["Account", "Emails", "Backup Email"],
+    ["Account", "Devices"],
+    ["Account", "Devices", "Google Pixel"],
+    ["Account", "Devices", "iPad Mini"],
+    ["Account", "Devices", "Laptop"]
+];
+
+var tree = arrangeIntoTree(paths);
+console.log(JSON.stringify(tree, null, 4));
+
+// Result
+// [
+//     {
+//         "name": "Account",
+//         "children": [
+//             {
+//                 "name": "Payment Methods",
+//                 "children": [
+//                     {
+//                         "name": "Credit Card",
+//                         "children": []
+//                     },
+//                     {
+//                         "name": "Paypal",
+//                         "children": []
+//                     }
+//                 ]
+//             },
+//             {
+//                 "name": "Emails",
+//                 "children": [
+//                     {
+//                         "name": "Main Email",
+//                         "children": []
+//                     },
+//                     {
+//                         "name": "Backup Email",
+//                         "children": []
+//                     }
+//                 ]
+//             },
+//             {
+//                 "name": "Devices",
+//                 "children": [
+//                     {
+//                         "name": "Google Pixel",
+//                         "children": []
+//                     },
+//                     {
+//                         "name": "iPad Mini",
+//                         "children": []
+//                     },
+//                     {
+//                         "name": "Laptop",
+//                         "children": []
+//                     }
+//                 ]
+//             }
+//         ]
+//     }
+// ]
+
+function arrangeIntoTree(paths) {
+    // Adapted from http://brandonclapp.com/arranging-an-array-of-flat-paths-into-a-json-tree-like-structure/
+    var tree = [];
+
+    for (var i = 0; i < paths.length; i++) {
+        var path = paths[i];
+        var currentLevel = tree;
+        for (var j = 0; j < path.length; j++) {
+            var part = path[j];
+
+            var existingPath = findWhere(currentLevel, 'name', part);
+
+            if (existingPath) {
+                currentLevel = existingPath.children;
+            } else {
+                var newPart = {
+                    name: part,
+                    children: [],
+                }
+
+                currentLevel.push(newPart);
+                currentLevel = newPart.children;
+            }
+        }
+    }
+    return tree;
+
+    function findWhere(array, key, value) {
+        // Adapted from https://stackoverflow.com/questions/32932994/findwhere-from-underscorejs-to-jquery
+        t = 0; // t is used as a counter
+        while (t < array.length && array[t][key] !== value) { t++; }; // find the index where the id is the as the aValue
+
+        if (t < array.length) {
+            return array[t]
+        } else {
+            return false;
+        }
+    }
+}
+
+///https://stackoverflow.com/questions/57344694/create-a-tree-from-a-list-of-strings-containing-paths-of-files-javascript
+let paths = ["About.vue","Categories/Index.vue","Categories/Demo.vue","Categories/Flavors.vue","Categories/Types/Index.vue","Categories/Types/Other.vue"];
+
+let result = [];
+let level = {result};
+
+paths.forEach(path => {
+  path.split('/').reduce((r, name, i, a) => {
+    if(!r[name]) {
+      r[name] = {result: []};
+      r.result.push({name, children: r[name].result})
+    }
+    
+    return r[name];
+  }, level)
+})
+
+console.log(result)
+
+
+
+*/
+</script>
+
+
+</html>
