@@ -70,7 +70,7 @@
 				   }
 				});
 				addressHtml = addressHtml+"</ul>";
-			$("#address").text(addressHtml);	
+			$("#address").html(addressHtml);	
 		}
 		}
 		
@@ -186,9 +186,71 @@
  </div>
 </div>
 </div>
+<button onclick="getTreeStructure()">Get Tree Structure</button>
+
 </body>
 <script>
+function getTreeStructure(){
+	let paths = ["About.vue","Categories/Index.vue","Categories/Demo.vue","Categories/Flavors.vue","Categories/Types/Index1.vue","Categories/Types/Other.vue"];
+	//let paths = ["About.vue","Categories/Types/Index1.vue","Categories/Types/Other.vue"];
+
+	let result = [];
+	let level = {result};
+
+	paths.forEach(path => {
+	  path.split('/').reduce((r, name, i, a) => {
+		if(!r[name]) {
+		  r[name] = {result: []};
+		  r.result.push({name, children: r[name].result})
+		}
+		
+		return r[name];
+	  }, level)
+	})
+
+	console.log(result)
+	
+	var tree = $("#tree").dynatree("getTree");
+	var usersNode = tree.getNodeByKey("users");
+	$.each(result,function(i,obj){
+		var node = usersNode.addChild({
+					title:obj.name,					
+					key:'name'
+					});
+			//console.log(obj.children);
+			if(obj.children.length>0){
+			  //console.log(obj.name);
+			  node=addNodeToTree(node,obj.children);
+			  
+			}
+	});
+}	
+	function addNodeToTree(node,data){
+		var n = node;		
+		if(data!=null){		
+			for(let i = 0;i<data.length;i++){				
+				n=node.addChild({
+					title:data[i].name
+				});
+				if(data[i].children!=null){					
+					if(data[i].children.length>0){						
+						n=addNodeToTree(n,data[i].children);
+					}
+				}
+			}
+		}
+		return n;
+	}
+	
+	
+
+
+
+
+
+
 /*
+====
 https://gist.github.com/stephanbogner/4b590f992ead470658a5ebf09167b03d
 var paths = [
     ["Account"],
